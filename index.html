@@ -2,22 +2,75 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>탐어 & 생물 도감</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>탐어 & 생물 관찰 도감</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>🐟 민물고기 & 곤충 탐어 도감</h1>
-    <p>직접 채집하고 사육하는 생물 기록장</p>
+    <h1>🌿 마이 네이처링 : 생물 채집 & 관찰 일지</h1>
+    <p>직접 탐어/채집한 국내 자생 생물을 기록하는 개인 도감</p>
   </header>
 
   <main>
+    <!-- 생물 관찰 기록 입력 폼 -->
+    <section class="form-section">
+      <h2>📷 새 생물 관찰 기록하기</h2>
+      <form id="observation-form">
+        <div class="form-group">
+          <label for="name">생물 이름</label>
+          <input type="text" id="name" placeholder="예: 밀어, 꺽지, 물방개" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="category">분류</label>
+            <select id="category">
+              <option value="fish">민물고기</option>
+              <option value="insect">곤충</option>
+              <option value="other">기타 생물</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="type">특성/세부분류</label>
+            <input type="text" id="type" placeholder="예: 저서어, 수생곤충, 계류성">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="date">채집/관찰 일자</label>
+            <input type="date" id="date" required>
+          </div>
+          <div class="form-group">
+            <label for="location">채집 장소</label>
+            <input type="text" id="location" placeholder="예: 춘천 공지천, 가평 조종천 등">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="image">사진 URL (선택)</label>
+          <input type="url" id="image" placeholder="https://... (사진 이미지 링크)">
+        </div>
+
+        <div class="form-group">
+          <label for="desc">관찰 및 사육 메모</label>
+          <textarea id="desc" rows="3" placeholder="서식지 환경, 바닥재, 먹이 반응, 관찰 특징 등"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">관찰 일지 등록하기</button>
+      </form>
+    </section>
+
+    <!-- 카테고리 필터 버튼 -->
     <div class="category-buttons">
-      <button onclick="filterCategory('all')">전체보기</button>
+      <button onclick="filterCategory('all')">전체 보기</button>
       <button onclick="filterCategory('fish')">민물고기</button>
       <button onclick="filterCategory('insect')">곤충</button>
+      <button onclick="filterCategory('other')">기타</button>
     </div>
 
+    <!-- 생물 카드 출력 영역 -->
     <div id="card-container" class="grid-container"></div>
   </main>
 
