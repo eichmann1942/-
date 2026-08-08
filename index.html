@@ -5,14 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>탐어 & 생물 관찰 도감</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- 카카오 지도 API (발급받으신 JavaScript 키 적용) -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9ebb99350df488c6fa21d77640db6f29&libraries=services"></script>
 </head>
 <body>
   <header>
     <h1>🌿 마이 네이처링 : 생물 채집 & 관찰 일지</h1>
-    <p>직접 탐어/채집한 국내 자생 생물을 기록하는 개인 도감</p>
+    <p>실시간으로 함께 기록하고 지도로 보는 민물 생물 도감</p>
   </header>
 
   <main>
+    <!-- 카카오 지도 영역 -->
+    <section class="map-section">
+      <h2>🗺️ 생물 관찰 지도</h2>
+      <p class="map-sub">지도의 핀을 누르면 관찰 기록을 볼 수 있으며, 등록 시 지도를 클릭해 위치를 지정할 수 있습니다.</p>
+      <div id="map" style="width:100%; height:360px; border-radius:10px;"></div>
+    </section>
+
     <!-- 생물 관찰 기록 입력 폼 -->
     <section class="form-section">
       <h2>📷 새 생물 관찰 기록하기</h2>
@@ -43,13 +54,24 @@
             <input type="date" id="date" required>
           </div>
           <div class="form-group">
-            <label for="location">채집 장소</label>
+            <label for="location">채집 장소 이름</label>
             <input type="text" id="location" placeholder="예: 춘천 공지천, 가평 조종천 등">
           </div>
         </div>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label for="lat">선택된 위도 (Latitude)</label>
+            <input type="text" id="lat" placeholder="지도를 클릭하세요" readonly>
+          </div>
+          <div class="form-group">
+            <label for="lng">선택된 경도 (Longitude)</label>
+            <input type="text" id="lng" placeholder="지도를 클릭하세요" readonly>
+          </div>
+        </div>
+
         <div class="form-group">
-          <label for="image-file">사진 첨부 (내 기기에서 파일 선택)</label>
+          <label for="image-file">사진 첨부 (내 기기에서 선택)</label>
           <input type="file" id="image-file" accept="image/*">
         </div>
 
@@ -58,7 +80,7 @@
           <textarea id="desc" rows="3" placeholder="서식지 환경, 바닥재, 먹이 반응, 관찰 특징 등"></textarea>
         </div>
 
-        <button type="submit" class="submit-btn">관찰 일지 등록하기</button>
+        <button type="submit" class="submit-btn">관찰 일지 서버에 등록하기</button>
       </form>
     </section>
 
