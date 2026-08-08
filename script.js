@@ -1,35 +1,114 @@
-// 도감에 들어갈 생물 데이터 (나중에 이 부분을 마음대로 수정/추가하시면 됩니다)
-const data = [
-  { name: "밀어", category: "fish", type: "저서어", habitat: "하천 중상류", desc: "바닥재에 붙어 생활하는 저서성 어종." },
-  { name: "쉬리", category: "fish", type: "여울성어종", habitat: "1급수 여울", desc: "물살이 세고 자갈이 깔린 곳에 서식." },
-  { name: "물방개", category: "insect", type: "수생곤충", habitat: "연못 및 정수역", desc: "헤엄을 잘 치며 뚜껑이 있는 사육장 필수." },
-  { name: "장수풍뎅이", category: "insect", type: "육상곤충", habitat: "참나무 숲", desc: "야행성 곤충으로 곤충젤리나 활엽수 수액을 먹음." }
-];
-
-function renderCards(items) {
-  const container = document.getElementById('card-container');
-  container.innerHTML = '';
-  items.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <h3>${item.name}</h3>
-      <span class="tag">${item.type}</span>
-      <p><strong>서식지:</strong> ${item.habitat}</p>
-      <p>${item.desc}</p>
-    `;
-    container.appendChild(card);
-  });
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  background-color: #f0f4f8;
+  margin: 0;
+  padding: 20px;
+  color: #333;
 }
 
-function filterCategory(category) {
-  if (category === 'all') {
-    renderCards(data);
-  } else {
-    const filtered = data.filter(item => item.category === category);
-    renderCards(filtered);
-  }
+header {
+  background: linear-gradient(135deg, #1b4332, #2d6a4f);
+  color: white;
+  padding: 30px 20px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-// 처음 화면 로딩 시 전체 카드 출력
-renderCards(data);
+header h1 { margin: 0 0 10px 0; font-size: 1.8rem; }
+header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
+
+main { max-width: 900px; margin: 0 auto; }
+
+.form-section {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  margin-top: 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.form-section h2 { margin-top: 0; font-size: 1.3rem; color: #2d6a4f; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; }
+
+.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+.form-row { display: flex; gap: 15px; }
+.form-row .form-group { flex: 1; }
+
+label { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #495057; }
+input, select, textarea {
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: #52b788; }
+
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #2d6a4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.submit-btn:hover { background-color: #1b4332; }
+
+.category-buttons { margin: 30px 0 15px 0; text-align: center; }
+.category-buttons button {
+  padding: 8px 18px;
+  margin: 0 4px;
+  border: 1px solid #2d6a4f;
+  background-color: white;
+  color: #2d6a4f;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.category-buttons button:hover { background-color: #2d6a4f; color: white; }
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.card-img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background-color: #e9ecef;
+}
+
+.card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.card-title { margin: 0; font-size: 1.2rem; color: #1b4332; }
+.badge { background: #e8f5e9; color: #2d6a4f; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+
+.meta-info { font-size: 0.85rem; color: #6c757d; margin-bottom: 10px; }
+.meta-info div { margin-bottom: 3px; }
+
+.card-desc { font-size: 0.9rem; line-height: 1.4; color: #495057; margin-bottom: 15px; flex-grow: 1; }
+
+.delete-btn {
+  align-self: flex-end;
+  background: none;
+  border: none;
+  color: #e63946;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+.delete-btn:hover { text-decoration: underline; }
