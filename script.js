@@ -1,8 +1,8 @@
-// 브라우저 저장소(LocalStorage)에서 데이터를 불러오고, 없으면 빈 목록([])으로 시작
+// 브라우저 저장소(LocalStorage)에서 데이터 불러오기
 let observations = JSON.parse(localStorage.getItem('my_observations')) || [];
 let currentFilter = 'all';
 
-// 오늘 날짜를 입력창 기본값으로 설정
+// 오늘 날짜 기본 입력
 document.getElementById('date').valueAsDate = new Date();
 
 // 생물 카드 출력 함수
@@ -19,7 +19,7 @@ function renderCards(data) {
     const card = document.createElement('div');
     card.className = 'card';
 
-    // 이미지 처리 (URL 없으면 기본 카메라 아이콘 표시)
+    // 첨부된 사진이 있으면 보여주고, 없으면 카메라 아이콘 표시
     const imgTag = item.image 
       ? `<img src="${item.image}" class="card-img" alt="${item.name}">`
       : `<div class="card-img" style="display:flex; align-items:center; justify-content:center; color:#aaa; font-size:2rem;">📷</div>`;
@@ -43,22 +43,63 @@ function renderCards(data) {
   });
 }
 
-// 신규 관찰 기록 등록 이벤트
-document.getElementById('observation-form').addEventListener('submit', function(e) {
+// 이미지를 압축하여 Base64 문자열로 변환하는 함수 (용량 최적화)
+function processImage(file) {
+  return new Promise((resolve) => {
+    if (!file) {
+      resolve('');
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600; // 가로 최대 600px로 리사이징
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // JPEG 형식으로 압축 (화질 0.7)
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    };
+  });
+}
+
+// 폼 제출 이벤트
+document.getElementById('observation-form').addEventListener('submit', async function(e) {
   e.preventDefault();
 
+  const fileInput = document.getElementById('image-file');
+  const file = fileInput.files[0];
+  
+  // 이미지 파일 처리 완료 후 기록 생성
+  const imageDataUrl = await processImage(file);
+
   const newObs = {
-    id: Date.now(), // 고유 ID (시간값)
+    id: Date.now(),
     name: document.getElementById('name').value,
     category: document.getElementById('category').value,
     type: document.getElementById('type').value,
     date: document.getElementById('date').value,
     location: document.getElementById('location').value,
-    image: document.getElementById('image').value,
+    image: imageDataUrl, // 압축된 파일 데이터
     desc: document.getElementById('desc').value
   };
 
-  observations.unshift(newObs); // 최신 관찰 기록이 맨 위에 오도록 추가
+  observations.unshift(newObs);
   saveAndRender();
 
   // 입력창 초기화
@@ -74,9 +115,13 @@ function deleteObservation(id) {
   }
 }
 
-// 브라우저 저장소에 저장하고 화면 갱신
+// 브라우저 저장소에 데이터 저장 후 화면 재출력
 function saveAndRender() {
-  localStorage.setItem('my_observations', JSON.stringify(observations));
+  try {
+    localStorage.setItem('my_observations', JSON.stringify(observations));
+  } catch (err) {
+    alert('저장 공간이 부족합니다. 더 이상 사진을 저장할 수 없습니다.');
+  }
   filterCategory(currentFilter);
 }
 
@@ -91,5 +136,5 @@ function filterCategory(category) {
   }
 }
 
-// 페이지 로드 시 화면 렌더링
+// 초기 출력
 filterCategory('all');
