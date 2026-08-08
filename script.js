@@ -1,9 +1,9 @@
-// Supabase 클라이언트 초기화 (발급된 URL 및 Publishable Key 적용)
+// Supabase 클라이언트 초기화
 const SUPABASE_URL = 'https://rsctpozcmabhvwofdzbi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Llq2LH2VuBxHy9_NP97gVA_fDzex2LR';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 관리자 삭제 암호 (필요시 원하는 암호로 수정 가능)
+// 관리자 삭제/수정 비밀번호 (초기 설정: 1234)
 const ADMIN_PASSWORD = "1234";
 
 let observations = [];
@@ -11,25 +11,32 @@ let currentFilter = 'all';
 let map, clickMarker;
 let mapMarkers = [];
 
-// 오늘 날짜 기본 세팅
+// 오늘 날짜 기본 입력
 document.getElementById('date').valueAsDate = new Date();
 
-// 페이지 로드 시 카카오 지도 초기화 및 데이터 불러오기
-window.onload = function() {
-  initMap();
-  fetchObservations();
-};
+// 카카오 지도 SDK 로딩 후 지도 생성 및 DB 데이터 로딩
+window.addEventListener('load', function() {
+  if (typeof kakao !== 'undefined' && kakao.maps) {
+    kakao.maps.load(function() {
+      initMap();
+      fetchObservations();
+    });
+  } else {
+    console.error("카카오 지도 API를 불러오지 못했습니다.");
+    fetchObservations();
+  }
+});
 
-// 카카오 지도 생성 및 클릭 이벤트 설정
+// 지도 생성 함수
 function initMap() {
   const container = document.getElementById('map');
   const options = {
-    center: new kakao.maps.LatLng(37.8813, 127.7298), // 기본 중심 (춘천/중부 지역)
+    center: new kakao.maps.LatLng(37.8813, 127.7298), // 춘천/중부 기본 중심 좌표
     level: 7
   };
   map = new kakao.maps.Map(container, options);
 
-  // 지도 클릭 시 좌표 가져오기 및 핀 생성
+  // 지도 클릭 시 위도/경도 입력 및 핀 표시
   kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
     const latlng = mouseEvent.latLng;
     document.getElementById('lat').value = latlng.getLat().toFixed(6);
@@ -44,7 +51,7 @@ function initMap() {
   });
 }
 
-// Supabase DB에서 데이터 불러오기
+// Supabase DB에서 목록 가져오기
 async function fetchObservations() {
   const { data, error } = await supabaseClient
     .from('observations')
@@ -52,16 +59,16 @@ async function fetchObservations() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('데이터 불러오기 오류:', error);
+    console.error('데이터 로딩 오류:', error);
     return;
   }
 
   observations = data || [];
   filterCategory(currentFilter);
-  updateMapMarkers();
+  if (map) updateMapMarkers();
 }
 
-// 지도 위의 생물 관찰 핀 업데이트
+// 지도 위에 관찰 핀 업로드
 function updateMapMarkers() {
   mapMarkers.forEach(m => m.setMap(null));
   mapMarkers = [];
@@ -90,7 +97,7 @@ function updateMapMarkers() {
   });
 }
 
-// 생물 카드 출력
+// 생물 카드 출력 (수정 버튼 포함)
 function renderCards(data) {
   const container = document.getElementById('card-container');
   container.innerHTML = '';
@@ -120,14 +127,17 @@ function renderCards(data) {
           <div>📅 <strong>일시:</strong> ${item.date || '미기재'}</div>
         </div>
         <p class="card-desc">${item.desc || '설명 없음'}</p>
-        <button class="delete-btn" onclick="deleteObservation('${item.id}')">삭제</button>
+        <div class="card-actions">
+          <button class="edit-btn" onclick="startEditObservation('${item.id}')">수정</button>
+          <button class="delete-btn" onclick="deleteObservation('${item.id}')">삭제</button>
+        </div>
       </div>
     `;
     container.appendChild(card);
   });
 }
 
-// 이미지 리사이징 및 압축
+// 이미지 최적화 및 압축
 function processImage(file) {
   return new Promise((resolve) => {
     if (!file) {
@@ -160,45 +170,125 @@ function processImage(file) {
   });
 }
 
-// 신규 기록 DB 등록
+// 수정 모드 시작 (카드에서 [수정] 클릭 시 입력창에 불러오기)
+function startEditObservation(id) {
+  const target = observations.find(item => String(item.id) === String(id));
+  if (!target) return;
+
+  document.getElementById('edit-id').value = target.id;
+  document.getElementById('name').value = target.name || '';
+  document.getElementById('category').value = target.category || 'fish';
+  document.getElementById('type').value = target.type || '';
+  document.getElementById('date').value = target.date || '';
+  document.getElementById('location').value = target.location || '';
+  document.getElementById('lat').value = target.lat || '';
+  document.getElementById('lng').value = target.lng || '';
+  document.getElementById('desc').value = target.desc || '';
+
+  // 지도 핀 위치 설정 및 이동
+  if (target.lat && target.lng && map) {
+    const loc = new kakao.maps.LatLng(target.lat, target.lng);
+    if (clickMarker) clickMarker.setMap(null);
+    clickMarker = new kakao.maps.Marker({ position: loc, map: map });
+    map.panTo(loc);
+  }
+
+  // 화면 제목 및 버튼 변경
+  document.getElementById('form-title').innerText = '✏️ 관찰 기록 수정하기';
+  document.getElementById('submit-btn').innerText = '수정 내용 저장하기';
+  document.getElementById('cancel-btn').style.display = 'block';
+
+  // 입력창 위치로 스크롤
+  document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 폼 초기화 (등록 모드로 복귀)
+function resetForm() {
+  document.getElementById('observation-form').reset();
+  document.getElementById('edit-id').value = '';
+  document.getElementById('date').valueAsDate = new Date();
+  document.getElementById('form-title').innerText = '📷 새 생물 관찰 기록하기';
+  document.getElementById('submit-btn').innerText = '관찰 일지 서버에 등록하기';
+  document.getElementById('cancel-btn').style.display = 'none';
+  if (clickMarker) clickMarker.setMap(null);
+}
+
+// DB 등록 및 수정 처리 이벤트
 document.getElementById('observation-form').addEventListener('submit', async function(e) {
   e.preventDefault();
 
+  const editId = document.getElementById('edit-id').value;
   const fileInput = document.getElementById('image-file');
   const file = fileInput.files[0];
-  const imageDataUrl = await processImage(file);
+  let imageDataUrl = await processImage(file);
 
   const latVal = parseFloat(document.getElementById('lat').value) || null;
   const lngVal = parseFloat(document.getElementById('lng').value) || null;
 
-  const newObs = {
-    name: document.getElementById('name').value,
-    category: document.getElementById('category').value,
-    type: document.getElementById('type').value,
-    date: document.getElementById('date').value,
-    location: document.getElementById('location').value,
-    lat: latVal,
-    lng: lngVal,
-    image: imageDataUrl,
-    desc: document.getElementById('desc').value
-  };
+  // 수정 모드 처리
+  if (editId) {
+    const inputPw = prompt('기록 수정을 위해 관리자 비밀번호를 입력하세요:');
+    if (inputPw !== ADMIN_PASSWORD) {
+      alert('비밀번호가 일치하지 않습니다.');
+      return;
+    }
 
-  const { error } = await supabaseClient.from('observations').insert([newObs]);
+    const target = observations.find(item => String(item.id) === String(editId));
+    // 사진을 새로 첨부하지 않은 경우 기존 사진 유지를 위함
+    if (!imageDataUrl && target) {
+      imageDataUrl = target.image;
+    }
 
-  if (error) {
-    alert('저장 중 오류가 발생했습니다: ' + error.message);
-    return;
+    const updateData = {
+      name: document.getElementById('name').value,
+      category: document.getElementById('category').value,
+      type: document.getElementById('type').value,
+      date: document.getElementById('date').value,
+      location: document.getElementById('location').value,
+      lat: latVal,
+      lng: lngVal,
+      image: imageDataUrl,
+      desc: document.getElementById('desc').value
+    };
+
+    const { error } = await supabaseClient
+      .from('observations')
+      .update(updateData)
+      .eq('id', editId);
+
+    if (error) {
+      alert('수정 실패: ' + error.message);
+      return;
+    }
+
+    alert('성공적으로 수정되었습니다!');
+  } else {
+    // 신규 등록 모드 처리
+    const newObs = {
+      name: document.getElementById('name').value,
+      category: document.getElementById('category').value,
+      type: document.getElementById('type').value,
+      date: document.getElementById('date').value,
+      location: document.getElementById('location').value,
+      lat: latVal,
+      lng: lngVal,
+      image: imageDataUrl,
+      desc: document.getElementById('desc').value
+    };
+
+    const { error } = await supabaseClient.from('observations').insert([newObs]);
+
+    if (error) {
+      alert('저장 실패: ' + error.message);
+      return;
+    }
   }
 
-  // 등록 완료 후 폼 및 클릭 마커 초기화
-  this.reset();
-  document.getElementById('date').valueAsDate = new Date();
-  if (clickMarker) clickMarker.setMap(null);
-
+  resetForm();
   fetchObservations();
 });
 
-// 관리자 암호 확인 후 DB 기록 삭제
+// 관리자 삭제 처리
 async function deleteObservation(id) {
   const inputPw = prompt('관리자 비밀번호를 입력하세요:');
   if (inputPw === ADMIN_PASSWORD) {
@@ -218,7 +308,7 @@ async function deleteObservation(id) {
   }
 }
 
-// 카테고리 필터링
+// 카테고리 필터
 function filterCategory(category) {
   currentFilter = category;
   if (category === 'all') {
