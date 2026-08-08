@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>탐어 & 생물 도감</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🐟 민물고기 & 곤충 탐어 도감</h1>
+    <p>직접 채집하고 사육하는 생물 기록장</p>
+  </header>
+
+  <main>
+    <div class="category-buttons">
+      <button onclick="filterCategory('all')">전체보기</button>
+      <button onclick="filterCategory('fish')">민물고기</button>
+      <button onclick="filterCategory('insect')">곤충</button>
+    </div>
+
+    <div id="card-container" class="grid-container"></div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
