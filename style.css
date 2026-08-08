@@ -63,8 +63,22 @@ input[readonly] { background-color: #f8f9fa; cursor: not-allowed; }
   font-weight: bold;
   cursor: pointer;
   transition: background 0.2s;
+  margin-bottom: 8px;
 }
 .submit-btn:hover { background-color: #1b4332; }
+
+.cancel-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+.cancel-btn:hover { background-color: #495057; }
 
 .category-buttons { margin: 30px 0 15px 0; text-align: center; }
 .category-buttons button {
@@ -111,13 +125,21 @@ input[readonly] { background-color: #f8f9fa; cursor: not-allowed; }
 
 .card-desc { font-size: 0.9rem; line-height: 1.4; color: #495057; margin-bottom: 15px; flex-grow: 1; }
 
-.delete-btn {
-  align-self: flex-end;
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.edit-btn, .delete-btn {
   background: none;
   border: none;
-  color: #e63946;
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;
 }
+.edit-btn { color: #2d6a4f; font-weight: bold; }
+.edit-btn:hover { text-decoration: underline; }
+.delete-btn { color: #e63946; }
 .delete-btn:hover { text-decoration: underline; }
