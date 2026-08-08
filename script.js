@@ -1,114 +1,95 @@
-body {
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
-  background-color: #f0f4f8;
-  margin: 0;
-  padding: 20px;
-  color: #333;
+// 브라우저 저장소(LocalStorage)에서 데이터를 불러오고, 없으면 빈 목록([])으로 시작
+let observations = JSON.parse(localStorage.getItem('my_observations')) || [];
+let currentFilter = 'all';
+
+// 오늘 날짜를 입력창 기본값으로 설정
+document.getElementById('date').valueAsDate = new Date();
+
+// 생물 카드 출력 함수
+function renderCards(data) {
+  const container = document.getElementById('card-container');
+  container.innerHTML = '';
+
+  if (data.length === 0) {
+    container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#888; padding: 40px 0;">아직 등록된 관찰 기록이 없습니다.<br>위 양식을 작성해 나만의 채집 일지를 등록해 보세요!</p>';
+    return;
+  }
+
+  data.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'card';
+
+    // 이미지 처리 (URL 없으면 기본 카메라 아이콘 표시)
+    const imgTag = item.image 
+      ? `<img src="${item.image}" class="card-img" alt="${item.name}">`
+      : `<div class="card-img" style="display:flex; align-items:center; justify-content:center; color:#aaa; font-size:2rem;">📷</div>`;
+
+    card.innerHTML = `
+      ${imgTag}
+      <div class="card-content">
+        <div class="card-header">
+          <h3 class="card-title">${item.name}</h3>
+          <span class="badge">${item.type || '기타'}</span>
+        </div>
+        <div class="meta-info">
+          <div>📍 <strong>장소:</strong> ${item.location || '미기재'}</div>
+          <div>📅 <strong>일시:</strong> ${item.date || '미기재'}</div>
+        </div>
+        <p class="card-desc">${item.desc || '설명 없음'}</p>
+        <button class="delete-btn" onclick="deleteObservation(${item.id})">삭제</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
 }
 
-header {
-  background: linear-gradient(135deg, #1b4332, #2d6a4f);
-  color: white;
-  padding: 30px 20px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+// 신규 관찰 기록 등록 이벤트
+document.getElementById('observation-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const newObs = {
+    id: Date.now(), // 고유 ID (시간값)
+    name: document.getElementById('name').value,
+    category: document.getElementById('category').value,
+    type: document.getElementById('type').value,
+    date: document.getElementById('date').value,
+    location: document.getElementById('location').value,
+    image: document.getElementById('image').value,
+    desc: document.getElementById('desc').value
+  };
+
+  observations.unshift(newObs); // 최신 관찰 기록이 맨 위에 오도록 추가
+  saveAndRender();
+
+  // 입력창 초기화
+  this.reset();
+  document.getElementById('date').valueAsDate = new Date();
+});
+
+// 기록 삭제 함수
+function deleteObservation(id) {
+  if (confirm('이 관찰 기록을 삭제하시겠습니까?')) {
+    observations = observations.filter(item => item.id !== id);
+    saveAndRender();
+  }
 }
 
-header h1 { margin: 0 0 10px 0; font-size: 1.8rem; }
-header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
-
-main { max-width: 900px; margin: 0 auto; }
-
-.form-section {
-  background: white;
-  padding: 24px;
-  border-radius: 12px;
-  margin-top: 25px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+// 브라우저 저장소에 저장하고 화면 갱신
+function saveAndRender() {
+  localStorage.setItem('my_observations', JSON.stringify(observations));
+  filterCategory(currentFilter);
 }
 
-.form-section h2 { margin-top: 0; font-size: 1.3rem; color: #2d6a4f; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; }
-
-.form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-.form-row { display: flex; gap: 15px; }
-.form-row .form-group { flex: 1; }
-
-label { font-weight: bold; font-size: 0.85rem; margin-bottom: 5px; color: #495057; }
-input, select, textarea {
-  padding: 10px;
-  border: 1px solid #ced4da;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-input:focus, select:focus, textarea:focus { outline: none; border-color: #52b788; }
-
-.submit-btn {
-  width: 100%;
-  padding: 12px;
-  background-color: #2d6a4f;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.submit-btn:hover { background-color: #1b4332; }
-
-.category-buttons { margin: 30px 0 15px 0; text-align: center; }
-.category-buttons button {
-  padding: 8px 18px;
-  margin: 0 4px;
-  border: 1px solid #2d6a4f;
-  background-color: white;
-  color: #2d6a4f;
-  border-radius: 20px;
-  font-weight: bold;
-  cursor: pointer;
-}
-.category-buttons button:hover { background-color: #2d6a4f; color: white; }
-
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 20px;
+// 카테고리 필터링
+function filterCategory(category) {
+  currentFilter = category;
+  if (category === 'all') {
+    renderCards(observations);
+  } else {
+    const filtered = observations.filter(item => item.category === category);
+    renderCards(filtered);
+  }
 }
 
-.card {
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-  display: flex;
-  flex-direction: column;
-}
-
-.card-img {
-  width: 100%;
-  height: 160px;
-  object-fit: cover;
-  background-color: #e9ecef;
-}
-
-.card-content { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
-.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.card-title { margin: 0; font-size: 1.2rem; color: #1b4332; }
-.badge { background: #e8f5e9; color: #2d6a4f; padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
-
-.meta-info { font-size: 0.85rem; color: #6c757d; margin-bottom: 10px; }
-.meta-info div { margin-bottom: 3px; }
-
-.card-desc { font-size: 0.9rem; line-height: 1.4; color: #495057; margin-bottom: 15px; flex-grow: 1; }
-
-.delete-btn {
-  align-self: flex-end;
-  background: none;
-  border: none;
-  color: #e63946;
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-}
-.delete-btn:hover { text-decoration: underline; }
+// 페이지 로드 시 화면 렌더링
+filterCategory('all');
