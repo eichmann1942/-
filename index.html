@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="style.css">
   <!-- Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 카카오 지도 API (발급받으신 JavaScript 키 적용) -->
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9ebb99350df488c6fa21d77640db6f29&libraries=services"></script>
+  <!-- 카카오 지도 API -->
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9ebb99350df488c6fa21d77640db6f29&autoload=false&libraries=services"></script>
 </head>
 <body>
   <header>
@@ -21,13 +21,16 @@
     <section class="map-section">
       <h2>🗺️ 생물 관찰 지도</h2>
       <p class="map-sub">지도의 핀을 누르면 관찰 기록을 볼 수 있으며, 등록 시 지도를 클릭해 위치를 지정할 수 있습니다.</p>
-      <div id="map" style="width:100%; height:360px; border-radius:10px;"></div>
+      <div id="map" style="width:100%; height:360px; border-radius:10px; background:#e9ecef;"></div>
     </section>
 
     <!-- 생물 관찰 기록 입력 폼 -->
     <section class="form-section">
-      <h2>📷 새 생물 관찰 기록하기</h2>
+      <h2 id="form-title">📷 새 생물 관찰 기록하기</h2>
       <form id="observation-form">
+        <!-- 수정용 ID 저장 숨김 필드 -->
+        <input type="hidden" id="edit-id" value="">
+
         <div class="form-group">
           <label for="name">생물 이름</label>
           <input type="text" id="name" placeholder="예: 밀어, 꺽지, 물방개" required>
@@ -71,7 +74,7 @@
         </div>
 
         <div class="form-group">
-          <label for="image-file">사진 첨부 (내 기기에서 선택)</label>
+          <label for="image-file">사진 첨부 (새 사진 선택 시에만 변경됨)</label>
           <input type="file" id="image-file" accept="image/*">
         </div>
 
@@ -80,16 +83,17 @@
           <textarea id="desc" rows="3" placeholder="서식지 환경, 바닥재, 먹이 반응, 관찰 특징 등"></textarea>
         </div>
 
-        <button type="submit" class="submit-btn">관찰 일지 서버에 등록하기</button>
+        <button type="submit" id="submit-btn" class="submit-btn">관찰 일지 서버에 등록하기</button>
+        <button type="button" id="cancel-btn" class="cancel-btn" onclick="resetForm()" style="display:none;">수정 취소</button>
       </form>
     </section>
 
     <!-- 카테고리 필터 버튼 -->
     <div class="category-buttons">
-      <button onclick="filterCategory('all')">전체 보기</button>
-      <button onclick="filterCategory('fish')">민물고기</button>
-      <button onclick="filterCategory('insect')">곤충</button>
-      <button onclick="filterCategory('other')">기타</button>
+      <button type="button" onclick="filterCategory('all')">전체 보기</button>
+      <button type="button" onclick="filterCategory('fish')">민물고기</button>
+      <button type="button" onclick="filterCategory('insect')">곤충</button>
+      <button type="button" onclick="filterCategory('other')">기타</button>
     </div>
 
     <!-- 생물 카드 출력 영역 -->
