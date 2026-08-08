@@ -20,7 +20,7 @@ header p { margin: 0; opacity: 0.9; font-size: 0.95rem; }
 
 main { max-width: 900px; margin: 0 auto; }
 
-.form-section {
+.map-section, .form-section {
   background: white;
   padding: 24px;
   border-radius: 12px;
@@ -28,7 +28,15 @@ main { max-width: 900px; margin: 0 auto; }
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.form-section h2 { margin-top: 0; font-size: 1.3rem; color: #2d6a4f; border-bottom: 2px solid #e8f5e9; padding-bottom: 8px; }
+.map-section h2, .form-section h2 { 
+  margin-top: 0; 
+  font-size: 1.3rem; 
+  color: #2d6a4f; 
+  border-bottom: 2px solid #e8f5e9; 
+  padding-bottom: 8px; 
+}
+
+.map-sub { font-size: 0.85rem; color: #666; margin-bottom: 15px; }
 
 .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
 .form-row { display: flex; gap: 15px; }
@@ -42,6 +50,7 @@ input, select, textarea {
   font-size: 0.95rem;
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: #52b788; }
+input[readonly] { background-color: #f8f9fa; cursor: not-allowed; }
 
 .submit-btn {
   width: 100%;
