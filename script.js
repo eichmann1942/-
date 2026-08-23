@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://rsctpozcmabhvwofdzbi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Llq2LH2VuBxHy9_NP97gVA_fDzex2LR';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 관리자 삭제/수정 비밀번호 (초기 설정: 1234)
+// 관리자 삭제/수정 비밀번호 (기본: 1234)
 const ADMIN_PASSWORD = "1234";
 
 let observations = [];
@@ -11,10 +11,10 @@ let currentFilter = 'all';
 let map, clickMarker;
 let mapMarkers = [];
 
-// 오늘 날짜 기본 입력
+// 오늘 날짜 기본 세팅
 document.getElementById('date').valueAsDate = new Date();
 
-// 카카오 지도 SDK 로딩 후 지도 생성 및 DB 데이터 로딩
+// 페이지 완전히 로드된 후 카카오맵 로딩 및 DB 불러오기
 window.addEventListener('load', function() {
   if (typeof kakao !== 'undefined' && kakao.maps) {
     kakao.maps.load(function() {
@@ -22,21 +22,23 @@ window.addEventListener('load', function() {
       fetchObservations();
     });
   } else {
-    console.error("카카오 지도 API를 불러오지 못했습니다.");
+    console.warn("카카오맵 API 스크립트 불러오기 중...");
     fetchObservations();
   }
 });
 
-// 지도 생성 함수
+// 카카오 지도 생성 함수
 function initMap() {
   const container = document.getElementById('map');
+  if (!container) return;
+
   const options = {
-    center: new kakao.maps.LatLng(37.8813, 127.7298), // 춘천/중부 기본 중심 좌표
+    center: new kakao.maps.LatLng(37.8813, 127.7298), // 기본 중심 좌표 (중부 지역)
     level: 7
   };
   map = new kakao.maps.Map(container, options);
 
-  // 지도 클릭 시 위도/경도 입력 및 핀 표시
+  // 지도 클릭 시 위도/경도 입력 및 클릭 핀 생성
   kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
     const latlng = mouseEvent.latLng;
     document.getElementById('lat').value = latlng.getLat().toFixed(6);
@@ -51,7 +53,7 @@ function initMap() {
   });
 }
 
-// Supabase DB에서 목록 가져오기
+// Supabase DB 데이터 불러오기
 async function fetchObservations() {
   const { data, error } = await supabaseClient
     .from('observations')
@@ -68,7 +70,7 @@ async function fetchObservations() {
   if (map) updateMapMarkers();
 }
 
-// 지도 위에 관찰 핀 업로드
+// 카카오 지도 핀 및 인포윈도우 업데이트
 function updateMapMarkers() {
   mapMarkers.forEach(m => m.setMap(null));
   mapMarkers = [];
@@ -97,7 +99,7 @@ function updateMapMarkers() {
   });
 }
 
-// 생물 카드 출력 (수정 버튼 포함)
+// 생물 카드 출력
 function renderCards(data) {
   const container = document.getElementById('card-container');
   container.innerHTML = '';
@@ -137,7 +139,7 @@ function renderCards(data) {
   });
 }
 
-// 이미지 최적화 및 압축
+// 이미지 리사이징 및 압축
 function processImage(file) {
   return new Promise((resolve) => {
     if (!file) {
@@ -170,7 +172,7 @@ function processImage(file) {
   });
 }
 
-// 수정 모드 시작 (카드에서 [수정] 클릭 시 입력창에 불러오기)
+// 수정 모드 활성화
 function startEditObservation(id) {
   const target = observations.find(item => String(item.id) === String(id));
   if (!target) return;
@@ -185,7 +187,6 @@ function startEditObservation(id) {
   document.getElementById('lng').value = target.lng || '';
   document.getElementById('desc').value = target.desc || '';
 
-  // 지도 핀 위치 설정 및 이동
   if (target.lat && target.lng && map) {
     const loc = new kakao.maps.LatLng(target.lat, target.lng);
     if (clickMarker) clickMarker.setMap(null);
@@ -193,16 +194,14 @@ function startEditObservation(id) {
     map.panTo(loc);
   }
 
-  // 화면 제목 및 버튼 변경
   document.getElementById('form-title').innerText = '✏️ 관찰 기록 수정하기';
   document.getElementById('submit-btn').innerText = '수정 내용 저장하기';
   document.getElementById('cancel-btn').style.display = 'block';
 
-  // 입력창 위치로 스크롤
   document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
 }
 
-// 폼 초기화 (등록 모드로 복귀)
+// 폼 초기화 (등록 모드)
 function resetForm() {
   document.getElementById('observation-form').reset();
   document.getElementById('edit-id').value = '';
@@ -213,7 +212,7 @@ function resetForm() {
   if (clickMarker) clickMarker.setMap(null);
 }
 
-// DB 등록 및 수정 처리 이벤트
+// DB 등록 및 수정 처리
 document.getElementById('observation-form').addEventListener('submit', async function(e) {
   e.preventDefault();
 
@@ -225,7 +224,6 @@ document.getElementById('observation-form').addEventListener('submit', async fun
   const latVal = parseFloat(document.getElementById('lat').value) || null;
   const lngVal = parseFloat(document.getElementById('lng').value) || null;
 
-  // 수정 모드 처리
   if (editId) {
     const inputPw = prompt('기록 수정을 위해 관리자 비밀번호를 입력하세요:');
     if (inputPw !== ADMIN_PASSWORD) {
@@ -234,7 +232,6 @@ document.getElementById('observation-form').addEventListener('submit', async fun
     }
 
     const target = observations.find(item => String(item.id) === String(editId));
-    // 사진을 새로 첨부하지 않은 경우 기존 사진 유지를 위함
     if (!imageDataUrl && target) {
       imageDataUrl = target.image;
     }
@@ -263,7 +260,6 @@ document.getElementById('observation-form').addEventListener('submit', async fun
 
     alert('성공적으로 수정되었습니다!');
   } else {
-    // 신규 등록 모드 처리
     const newObs = {
       name: document.getElementById('name').value,
       category: document.getElementById('category').value,
@@ -288,7 +284,7 @@ document.getElementById('observation-form').addEventListener('submit', async fun
   fetchObservations();
 });
 
-// 관리자 삭제 처리
+// 관리자 삭제
 async function deleteObservation(id) {
   const inputPw = prompt('관리자 비밀번호를 입력하세요:');
   if (inputPw === ADMIN_PASSWORD) {
